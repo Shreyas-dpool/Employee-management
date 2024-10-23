@@ -1,7 +1,11 @@
 import mysql.connector as mysql
 import csv
+print("Enter your mySQL server details")
+host = input('Hostname: ')
+user = input('User: ')
+passw = input('Password: ')
 
-mycon = mysql.connect(host='localhost',user='root',passwd='root')
+mycon = mysql.connect(host=host,user=user,passwd=passw)
 mycon.autocommit= True
 Cursor = mycon.cursor()
 #Login Menu
