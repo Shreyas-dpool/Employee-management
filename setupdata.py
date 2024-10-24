@@ -1,10 +1,10 @@
 import mysql.connector as mysql
 import csv
+import os 
 print("Enter your mySQL server details")
 host = input('Hostname: ')
 user = input('User: ')
 passw = input('Password: ')
-hos = input('En')
 mycon = mysql.connect(host=host,user=user,passwd=passw)
 mycon.autocommit= True
 # Creating database
@@ -45,9 +45,14 @@ q = 'CREATE TABLE if not exists E_LEAVE ' \
 'FOREIGN KEY (Id) REFERENCES EMPLOYEES(Id) ON UPDATE CASCADE ON DELETE CASCADE);'
 Cursor.execute(q)
 
+#Using OS module to get relative path
+base_dir = os.path.dirname(__file__)
+def fpath(File):
+    file_path=os.path.join(base_dir,'Data',File)
+    return file_path
 #Inserting data into the tables
 #Employee
-with open('F:\\Project\\Data\\Employees.csv',newline='\r\n') as f:
+with open(fpath('Employees.csv'),newline='\r\n') as f:
     r = csv.reader(f,quoting=csv.QUOTE_MINIMAL)
     for re in r:
         
@@ -60,7 +65,7 @@ with open('F:\\Project\\Data\\Employees.csv',newline='\r\n') as f:
             f'VALUES {rec};'
             Cursor.execute(query)
 #Payslips
-with open('F:\\Project\\Data\\Payslips.csv',newline='\r\n')as f:
+with open(fpath('Payslips.csv'),newline='\r\n')as f:
     r = csv.reader(f)
     for re in r:
         if re==[]:
@@ -72,7 +77,7 @@ with open('F:\\Project\\Data\\Payslips.csv',newline='\r\n')as f:
             VALUES {rec};'''
             Cursor.execute(query)
 #Leave
-with open('F:\\Project\\Data\\Leave.csv',newline='\r\n')as f:
+with open(fpath('Leave.csv'),newline='\r\n')as f:
     r = csv.reader(f)
     for re in r:
         
@@ -86,3 +91,4 @@ with open('F:\\Project\\Data\\Leave.csv',newline='\r\n')as f:
             Cursor.execute(query)
 print('Data successfully imported')
 input('press enter to exit')
+mycon.close()

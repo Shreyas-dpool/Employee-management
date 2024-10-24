@@ -8,6 +8,7 @@ passw = input('Password: ')
 mycon = mysql.connect(host=host,user=user,passwd=passw)
 mycon.autocommit= True
 Cursor = mycon.cursor()
+Cursor.execute("USE COMPANY;")
 #Login Menu
 def login_menu():
     global uid, password
@@ -55,14 +56,12 @@ def main_menu():
         print('Your department is: ',rec[4])
         print('Your position is: ',rec[5])
         print('Your phone no is: ',rec[-1])
+        main_menu()
     elif ch ==3:
         entered=input(('Enter your current password: '))
         if entered == password:
             new = input('Enter your new password: ')
-            q = f'''UPDATE EMPLOYEES
-            SET pass = {entered}
-            WHERE Id={uid};'''
-            Cursor.execute(q)
+            update("EMPLOYEES",'Pass',new,uid)
             print("Password successfully updated")
         else:
             print('Wrong password entered! ')
@@ -109,13 +108,14 @@ def salary_menu():
 
 #Leave menu
 def leave_menu():
+    global uid
     print('Leave menu')
     print('1: View leave details')
     print('2: Apply for leave')
     ch2 = int(input('Enter choice: '))
     if ch2 == 1:
         query = f'''SELECT * FROM E_LEAVE
-        WHERE Id={uid};'''
+        WHERE Id= {uid};'''
         Cursor.execute(query)
         rec = Cursor.fetchone()
         print('Your leave type is: ',rec[1])
@@ -127,8 +127,7 @@ def leave_menu():
         typ = input('Enter your type of leave: ')
         Dur = int(input('Enter your leave duration: '))
         reason = input('Enter your reason: ')
-        tup = ()
-        uid,typ,Dur,reason = tup
+        tup = uid,typ,Dur,reason
         query = f'''INSERT INTO E_LEAVE (Id,LeaveType,Duration,Reason)
         Values {tup};'''
         print('Leave applied, wait for further notice if approved.')
@@ -136,16 +135,19 @@ def leave_menu():
 
 #Update function
 def update(table,attribute,value,Id):
-    if type(value) is int:
-        query = f'''UPDATE {table}
-        set {attribute}={value}
-        where Id={uid}'''
-        Cursor.execute(query)    
-    else:
-        query = f'''UPDATE {table}
-        set {attribute}='{value}'
-        where Id={uid}'''
-        Cursor.execute(query)    
+    try: 
+        if type(value) is int:
+            query = f'''UPDATE {table}
+            set {attribute}={value}
+            where Id={Id};'''
+            Cursor.execute(query)  
+        else:
+            query = f'''UPDATE {table}
+            set {attribute}='{value}'
+            where Id={Id};'''
+            Cursor.execute(query)    
+    except:
+        print('Id or attribute not found')
 
 # Admin menu
 def admin_menu():
@@ -162,18 +164,16 @@ def admin_menu():
         upid = int(input('Enter the id of the user you want to update: '))
         atr = input('Enter which attribute you want to update(Id,Department,Position,Phone_no): ')
         val = input('Enter new value of attribute: ')
-        if atr.lower() == 'id'or 'phone_no':
-            val = int(val)
-            update('EMPLOYEES',atr,val,upid)
-
-        else:
-            update('EMPLOYEES',atr,val,upid)
+        update('EMPLOYEES',atr,val,upid)
+        admin_menu()
             
     elif ch1 ==2:
         upid = int(input('Enter the id of the user you want to update: '))
         atr = input('Enter which attribute you want to update(Base_amount,Deductions,Bonus): ')
-        val = int(input('Enter new value of attribute: '))
+        val = input('Enter new value of attribute: ')
         update('PAYSLIPS',atr,val,upid)
+        print('Successfully updated')
+        admin_menu()
     elif ch1 ==3:
         upid = int(input('Enter the id of whos leave details you want to see: '))
         query = f'''SELECT * FROM E_LEAVE
@@ -185,7 +185,7 @@ def admin_menu():
         print('Their reason you applied for leave is: ',rec[-1])
         print('Their leave status: ',rec[3])
         print('their leave reason is: ',rec[-1])
-        if rec[3].lower()=='Pending':
+        if rec[3].lower()=='pending':
             print('This leave application is pending, you can approve, deny or leave it pending')
             nstat = input('Enter current status: ')
             update('E_LEAVE','Status',nstat,upid)
@@ -195,21 +195,19 @@ def admin_menu():
     elif ch1 ==4:
         Id = int(input('Enter new employee id: '))
         passw = input('Enter password: ')
-        name = input('Enter name')
+        name = input('Enter name: ')
         hiredate = input('Enter hire date: ')
         dep = input('Enter department')
         pos = input('Enter position: ')
         ph = input('Enter phone number: ')
         base = int(input('Enter base salary: '))
-        bonus = int(input('Enter bonus(optional): '))
+        bonus = int(input('Enter bonus: '))
         deductions = int(input('Enter deductions: '))
-        erec = ()
-        Id,passw,name,hiredate,dep,pos,ph = erec
+        erec = Id,passw,name,hiredate,dep,pos,ph
         query = f'''insert into employees
         Values {erec};'''
         Cursor.execute(query)
-        prec = ()
-        Id,base,bonus,deductions = prec
+        prec = Id,base,bonus,deductions
         query='INSERT INTO PAYSLIPS'\
         f'VALUES {prec};'
         Cursor.execute(query)
@@ -223,6 +221,8 @@ def admin_menu():
             print('Record successfully deleted')
         except:
             print('Details not found')
+        finally:
+            admin_menu()
     elif ch1==6:
         main_menu()
     elif ch1==7:
@@ -237,3 +237,5 @@ print('id: 34634 password: &zZ)K9')
 print('id: 24232 password:eEc5>>')
 print('id: 54745 password=Rb9Y{')
 login_menu()
+input('Press Enter to exit')
+mycon.close()
