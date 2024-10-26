@@ -74,6 +74,7 @@ def main_menu():
             new_password = input('Enter your new password: ')
             update_record("EMPLOYEES", 'Pass', new_password, user_id)
             print("Password successfully updated")
+            main_menu()
         else:
             print('Wrong password entered!')
             main_menu()
@@ -97,7 +98,7 @@ def salary_menu():
     
     if salary_choice == 1 or salary_choice == 2:
         # Fetch salary details
-        query = 'SELECT Id, Base_amount, Bonus, Deductions, (Base_amount + Bonus - Deductions) FROM PAYSLIPS WHERE Id={user_id};'
+        query = f'SELECT Id, Base_amount, Bonus, Deductions, (Base_amount + Bonus - Deductions) FROM PAYSLIPS WHERE Id={user_id};'
         cursor.execute(query)
         salary_record = cursor.fetchone()
         
@@ -122,26 +123,33 @@ def leave_menu():
     print('1: View leave details')
     print('2: Apply for leave')
     leave_choice = int(input('Enter choice: '))
+    query = f"SELECT * FROM E_LEAVE WHERE Id = {user_id};"
+    cursor.execute(query)
+    leave_record = cursor.fetchone()
     
     if leave_choice == 1:
         # Fetch and display leave details
-        query = f"SELECT * FROM E_LEAVE WHERE Id = {user_id};"
-        cursor.execute(query)
-        leave_record = cursor.fetchone()
         print('Your leave type is:', leave_record[1])
         print('Your leave duration is:', leave_record[2])
         print('Reason for leave:', leave_record[-1])
         print('Leave status:', leave_record[3])
         main_menu()
-    elif leave_choice == 2:
+    elif leave_choice == 2 and user_id!='':
+        #Checking if there is already an exisiting leave application
+        if leave_record !=[] :
+            print('Leave record already exists')
+            main_menu()
         # Apply for leave
-        leave_type = input('Enter your type of leave: ')
-        leave_duration = int(input('Enter your leave duration: '))
-        leave_reason = input('Enter your reason: ')
-        leave_data = (user_id, leave_type, leave_duration, leave_reason)
-        query = f"INSERT INTO E_LEAVE (Id, LeaveType, Duration, Reason) VALUES {leave_data};"
-        print('Leave applied, wait for further notice if approved.')
-        main_menu()
+        else:
+            leave_type = input('Enter your type of leave: ')
+            leave_duration = int(input('Enter your leave duration: '))
+            leave_reason = input('Enter your reason: ')
+            leave_data = (user_id, leave_type, leave_duration, leave_reason)
+            query = f"INSERT INTO E_LEAVE (Id, LeaveType, Duration, Reason) VALUES {leave_data};"
+            print('Leave applied, wait for further notice if approved.')
+            main_menu()
+    else:
+        print("Invalid choice")
 
 # Update function to update database records
 def update_record(table, attribute, value, Id):
